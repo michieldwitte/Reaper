@@ -1,0 +1,13 @@
+[package]
+name = "Reaper"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+nix = "0.26.1"
+libc = "0.2.139"
+
+[profile.release]
+strip = true
+opt-level = "z"
+lto = true
