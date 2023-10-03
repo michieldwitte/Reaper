@@ -1,12 +1,13 @@
 [package]
 name = "reaper"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2018"
 repository = "https://github.com/michieldwitte/reaper"
 
 [dependencies]
 nix = "0.26.1"
 libc = "0.2.139"
+signal-hook = "0.3.17"
 
 [profile.release]
 strip = true

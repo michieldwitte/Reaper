@@ -5,9 +5,14 @@ use std::ffi::CString;
 use std::path::Path;
 
 use libc::{prctl, PR_SET_CHILD_SUBREAPER};
+use nix::sys::signal::SigHandler;
+use nix::sys::signal::Signal;
 use nix::sys::wait::waitpid;
 use nix::unistd::{fork, execv, getpid, ForkResult, Pid};
-use nix::sys::signal::{kill, SIGKILL};
+use nix::sys::signal::{kill, SIGKILL, SIGINT};
+use nix::sys::signal;
+
+static mut MAIN_PID : Option<Pid> = None;
 
 fn get_child_pids(process_id: Pid) -> Vec<Pid> {
 	let output = fs::read_to_string(format!("/proc/{process_id}/task/{process_id}/children")).expect("Failed to read out file");
@@ -15,6 +20,17 @@ fn get_child_pids(process_id: Pid) -> Vec<Pid> {
 			.filter(|&x| !x.is_empty())
 			.map(|x| Pid::from_raw(x.parse::<i32>().unwrap()))
 			.collect();
+}
+
+extern fn handle_sigint(_signal: libc::c_int) {
+	unsafe {
+		let pid = MAIN_PID.expect("Could not get a pid");
+		match kill(pid, SIGINT) {
+			Ok(_) => (),
+			Err(error) => {println!("Could not kill pid {}, error: {}", pid, error);}
+		}
+	}
+
 }
 
 fn main() {
@@ -40,14 +56,19 @@ fn main() {
 			panic!("fork failed: {}", err);
 		}
 	};
-	
+
+	unsafe {MAIN_PID = Some(child_pid);}
+
+	let handler = SigHandler::Handler(handle_sigint);
+	unsafe { signal::signal(Signal::SIGINT, handler) }.unwrap();
+
 	waitpid(child_pid, None).expect(format!("Waiting for main child process pid {child_pid} failed").as_str());
-	
+
 	let process_id = getpid();
 
 	loop {
 		let child_pids = get_child_pids(process_id);
-		if child_pids.len() == 0 { 
+		if child_pids.len() == 0 {
 			break;
 		}
 		for child_pid in child_pids {
