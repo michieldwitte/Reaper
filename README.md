@@ -7,4 +7,4 @@ This uses the `PR_SET_CHILD_SUBREAPER` argument for prctl.
 
 ## Usage
 
-```./Reaper /usr/bin/child_spawning_process```
+```./reaper /usr/bin/child_spawning_process```
