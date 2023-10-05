@@ -5,9 +5,9 @@ edition = "2018"
 repository = "https://github.com/michieldwitte/reaper"
 
 [dependencies]
-nix = "0.26.1"
+nix = "0.27.1"
 libc = "0.2.139"
-signal-hook = "0.3.17"
+ctrlc = "3.4.1"
 
 [profile.release]
 strip = true
